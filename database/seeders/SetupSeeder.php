@@ -43,6 +43,7 @@ class SetupSeeder extends Seeder
 
         if (app()->environment('local')) {
             $this->seedDemoTenant();
+            $this->call(DemoVillaSeeder::class);
         }
     }
 
