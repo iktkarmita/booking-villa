@@ -335,4 +335,19 @@ class PaymentGatewayTest extends TestCase
 
         $this->assertSame(1, Payment::withoutTenancy()->where('booking_id', $booking->id)->where('type', 'balance')->count());
     }
+
+    public function test_perintah_fake_paid_mensimulasikan_pembayaran(): void
+    {
+        $this->useGateway();
+        $booking = $this->book();
+
+        $this->artisan('payment:fake-paid', ['code' => strtolower($booking->code)])
+            ->expectsOutputToContain('processed')
+            ->assertSuccessful();
+
+        $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
+
+        $this->artisan('payment:fake-paid', ['code' => $booking->code])->assertFailed();
+        $this->artisan('payment:fake-paid', ['code' => 'BV-TIDAKADA'])->assertFailed();
+    }
 }
