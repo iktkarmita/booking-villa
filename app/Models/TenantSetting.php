@@ -29,6 +29,16 @@ class TenantSetting extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Menyimpan form Pengaturan tanpa mengisi ulang kunci rahasia tidak boleh menghapus kredensial yang sudah ada.
+        static::saving(function (TenantSetting $settings) {
+            if ($settings->exists && $settings->isDirty('gateway_credentials') && blank($settings->gateway_credentials)) {
+                $settings->gateway_credentials = $settings->getOriginal('gateway_credentials');
+            }
+        });
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
