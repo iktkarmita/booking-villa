@@ -49,8 +49,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
-            'platform' => $this->is_super_admin,
-            'admin' => $this->is_super_admin || $this->tenants()->exists(),
+            'platform' => (bool) $this->is_super_admin,
+            'admin' => (bool) $this->is_super_admin || $this->tenants()->exists(),
             default => false,
         };
     }
@@ -58,12 +58,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function getTenants(Panel $panel): Collection
     {
         // Super admin boleh membuka semua tenant (untuk dukungan). Perlu dibatasi bila tenant sudah ribuan.
-        return $this->is_super_admin ? Tenant::query()->get() : $this->tenants()->get();
+        return (bool) $this->is_super_admin ? Tenant::query()->get() : $this->tenants()->get();
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->is_super_admin
+        return (bool) $this->is_super_admin
             || $this->tenants()->whereKey($tenant->getKey())->exists();
     }
 }
