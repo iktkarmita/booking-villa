@@ -140,6 +140,7 @@ final class Notifier
                     $url,
                     __($panel ? 'mail.open_panel' : 'mail.open_booking'),
                     $tenant->name,
+                    $panel ? null : TenantSetting::query()->where('tenant_id', $tenant->getKey())->value('notify_email'),
                 );
             } finally {
                 app()->setLocale($previous);

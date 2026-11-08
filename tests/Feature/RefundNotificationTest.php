@@ -307,6 +307,23 @@ class RefundNotificationTest extends TestCase
         Mail::assertSent(SimpleMail::class, 2);
     }
 
+    public function test_nama_pengirim_adalah_nama_villa_dan_balasan_ke_owner(): void
+    {
+        config(['mail.from.address' => 'noreply@example.com']);
+        $this->settings(['notify_email' => 'owner@example.com']);
+
+        $this->book();
+
+        Mail::assertSent(SimpleMail::class, function (SimpleMail $m) {
+            $envelope = $m->envelope();
+
+            return $m->hasTo('tamu@example.com')
+                && $envelope->from?->address === 'noreply@example.com'
+                && $envelope->from?->name === 'Villa Bunga'
+                && ($envelope->replyTo[0]->address ?? null) === 'owner@example.com';
+        });
+    }
+
     public function test_tanpa_email_owner_hanya_tamu_yang_dikirimi(): void
     {
         $this->book();
