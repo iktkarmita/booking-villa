@@ -16,7 +16,7 @@ class SimpleMail extends Mailable
         public ?string $url = null,
         public ?string $urlLabel = null,
         public string $brand = '',
-        public ?string $replyTo = null,
+        public ?string $replyToEmail = null,
     ) {}
 
     public function envelope(): Envelope
@@ -24,7 +24,7 @@ class SimpleMail extends Mailable
         // Nama pengirim = nama villa (alamat tetap dari MAIL_FROM_ADDRESS agar lolos SMTP); balasan tamu ke owner.
         return new Envelope(
             from: $this->brand !== '' ? new Address((string) config('mail.from.address'), $this->brand) : null,
-            replyTo: filled($this->replyTo) ? [new Address($this->replyTo)] : [],
+            replyTo: filled($this->replyToEmail) ? [new Address($this->replyToEmail)] : [],
             subject: $this->mailSubject,
         );
     }
