@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Route;
 | Tenant dikenali dari host oleh middleware tenant.resolve.
 */
 Route::middleware(['tenant.resolve', 'tenant.active', 'locale'])->group(function () {
-    Route::get('/', HomeController::class)->name('home');
+    Route::get('/', [SiteController::class, 'home'])->name('home');
     Route::get('/lang/{locale}', LocaleController::class)->name('locale');
+
+    Route::middleware('tenant.required')->group(function () {
+        Route::get('/villas/{slug}', [SiteController::class, 'villa'])->name('site.villa');
+        Route::get('/book/{room}', [SiteController::class, 'checkout'])->whereNumber('room')->name('site.checkout');
+        Route::get('/booking/{code}', [SiteController::class, 'booking'])->name('site.booking');
+    });
 });
