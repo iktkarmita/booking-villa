@@ -1,5 +1,7 @@
 <x-filament-panels::page>
-    @php($options = $this->roomOptions())
+    @php
+        $options = $this->roomOptions();
+    @endphp
 
     @if ($options->isEmpty())
         <x-filament::section>
