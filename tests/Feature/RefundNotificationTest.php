@@ -45,6 +45,7 @@ class RefundNotificationTest extends TestCase
         parent::setUp();
 
         config(['booking.base_domain' => 'localhost']);
+        app()->setLocale('id');
         Mail::fake();
 
         $this->tenant = Tenant::factory()->create(['slug' => 'bunga', 'subdomain' => 'bunga', 'name' => 'Villa Bunga']);
@@ -63,12 +64,13 @@ class RefundNotificationTest extends TestCase
         $this->tenant->settings->update($values);
     }
 
-    private function book(string $locale = 'id', string $email = 'tamu@example.com'): Booking
+    /** @param int $offsetDays geser tanggal supaya beberapa booking bisa hidup berdampingan */
+    private function book(string $locale = 'id', string $email = 'tamu@example.com', int $offsetDays = 0): Booking
     {
         return BookingService::create(
             $this->room->fresh(),
-            $this->in,
-            $this->out,
+            CarbonImmutable::parse($this->in)->addDays($offsetDays)->toDateString(),
+            CarbonImmutable::parse($this->out)->addDays($offsetDays)->toDateString(),
             2,
             ['name' => 'Budi', 'email' => $email, 'phone' => '081234567890'],
             null,
@@ -77,9 +79,9 @@ class RefundNotificationTest extends TestCase
     }
 
     /** Booking terkonfirmasi, dibayar penuh (Rp 1.500.000). */
-    private function paidBooking(): Booking
+    private function paidBooking(int $offsetDays = 0): Booking
     {
-        $booking = $this->book();
+        $booking = $this->book('id', 'tamu@example.com', $offsetDays);
 
         return BookingService::confirmPayment(Payment::withoutTenancy()->where('booking_id', $booking->id)->firstOrFail());
     }
@@ -154,7 +156,7 @@ class RefundNotificationTest extends TestCase
             $this->assertSame('refund_not_allowed', $e->reason);
         }
 
-        $booking = $this->paidBooking();
+        $booking = $this->paidBooking(10);
         RefundService::request($booking, 'x', $this->dest());
 
         $this->expectException(BookingRuleViolated::class);
@@ -398,7 +400,7 @@ class RefundNotificationTest extends TestCase
 
         $this->get('http://bunga.localhost/booking/'.$pending->code)->assertOk()->assertDontSee('Batalkan booking ini');
 
-        $paid = $this->paidBooking();
+        $paid = $this->paidBooking(10);
 
         $this->get('http://bunga.localhost/booking/'.$paid->code)->assertOk()->assertSee('Batalkan booking ini');
     }

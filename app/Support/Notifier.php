@@ -6,7 +6,6 @@ use App\Mail\SimpleMail;
 use App\Models\Booking;
 use App\Models\Refund;
 use App\Models\TenantSetting;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -116,7 +115,10 @@ final class Notifier
             $booking = Booking::withoutTenancy()->with(['room.villa', 'guest'])->findOrFail($booking->getKey());
             $tenant = \App\Models\Tenant::query()->findOrFail($booking->tenant_id);
 
-            App::withLocale($locale, function () use ($booking, $tenant, $to, $key, $extra, $panel) {
+            $previous = app()->getLocale();
+            app()->setLocale($locale);
+
+            try {
                 $params = $extra + [
                     'tenant' => $tenant->name,
                     'code' => $booking->code,
@@ -129,15 +131,24 @@ final class Notifier
 
                 $url = $panel ? self::siteBase($tenant).'/admin/'.$tenant->slug.'/bookings' : self::siteBase($tenant).'/booking/'.$booking->code;
 
-                Mail::to($to)->send(new SimpleMail(
+                $mail = new SimpleMail(
                     __('mail.'.$key.'.subject', $params),
                     __('mail.'.$key.'.body', $params),
                     $url,
                     __($panel ? 'mail.open_panel' : 'mail.open_booking'),
                     $tenant->name,
-                ));
-            });
+                );
+            } finally {
+                app()->setLocale($previous);
+            }
+
+            Mail::to($to)->send($mail);
         } catch (Throwable $e) {
+            // Saat tes, kesalahan kode (bukan gangguan jaringan/SMTP) harus terlihat, tidak tertelan.
+            if (app()->runningUnitTests() && ! $e instanceof \Symfony\Component\Mailer\Exception\TransportExceptionInterface) {
+                throw $e;
+            }
+
             report($e);
         }
     }
