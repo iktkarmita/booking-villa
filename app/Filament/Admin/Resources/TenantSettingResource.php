@@ -5,8 +5,10 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\TenantSettingResource\Pages\ManageTenantSettings;
 use App\Models\TenantSetting;
 use App\Support\Payment\GatewayFactory;
+use App\Support\RefundPolicy;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -103,6 +105,18 @@ class TenantSettingResource extends Resource
             TextInput::make('booking_hold_minutes')
                 ->label(__($t.'hold'))
                 ->numeric()->integer()->minValue(10)->maxValue(10080)->required()
+                ->columnSpanFull(),
+            Repeater::make('refund_tiers')
+                ->label(__($t.'refund_tiers'))
+                ->helperText(__($t.'refund_tiers_help'))
+                ->schema([
+                    TextInput::make('days')->label(__($t.'tier_days'))->numeric()->integer()->minValue(0)->maxValue(365)->required(),
+                    TextInput::make('percent')->label(__($t.'tier_percent'))->numeric()->integer()->minValue(0)->maxValue(100)->required(),
+                ])
+                ->columns(2)
+                ->default(RefundPolicy::DEFAULT_TIERS)
+                ->addActionLabel(__($t.'tier_add'))
+                ->reorderable(false)
                 ->columnSpanFull(),
             Textarea::make('cancellation_policy.id')
                 ->label(__($t.'policy_id'))

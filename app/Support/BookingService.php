@@ -153,13 +153,18 @@ final class BookingService
             PaymentService::startQris($payment);
         }
 
+        Notifier::bookingCreated($booking);
+
         return $booking;
     }
 
     /** Owner mengonfirmasi pembayaran (transfer manual) sudah diterima. */
     public static function confirmPayment(Payment $payment): Booking
     {
-        return DB::transaction(function () use ($payment) {
+        $changed = false;
+        $first = false;
+
+        $booking = DB::transaction(function () use ($payment, &$changed, &$first) {
             $booking = Booking::withoutTenancy()->lockForUpdate()->findOrFail($payment->booking_id);
             $payment = Payment::withoutTenancy()->lockForUpdate()->findOrFail($payment->getKey());
 
@@ -173,14 +178,23 @@ final class BookingService
 
             $payment->update(['status' => 'paid', 'paid_at' => now()]);
 
+            $changed = true;
+            $first = $booking->status === BookingStatus::PendingPayment;
+
             return self::applyPaid($booking, $payment->amount);
         });
+
+        if ($changed) {
+            Notifier::paymentReceived($booking, $payment->amount, $first);
+        }
+
+        return $booking;
     }
 
     /** Owner mencatat pelunasan/pembayaran tambahan yang diterima langsung (tunai/transfer). */
     public static function recordBalance(Booking $booking, int $amount, ?string $note = null): Booking
     {
-        return DB::transaction(function () use ($booking, $amount, $note) {
+        $booking = DB::transaction(function () use ($booking, $amount, $note) {
             $booking = Booking::withoutTenancy()->lockForUpdate()->findOrFail($booking->getKey());
 
             if (! in_array($booking->status, [BookingStatus::Confirmed, BookingStatus::CheckedIn], true)) {
@@ -205,6 +219,10 @@ final class BookingService
 
             return self::applyPaid($booking, $amount);
         });
+
+        Notifier::paymentReceived($booking, $amount, false);
+
+        return $booking;
     }
 
     /** Booking pending yang lewat batas waktu -> expired, tanggal dibebaskan. */
@@ -242,12 +260,16 @@ final class BookingService
     /** Pembatalan oleh owner. Refund diproses terpisah (fase 5). */
     public static function cancel(Booking $booking, ?string $reason = null): Booking
     {
-        return DB::transaction(function () use ($booking, $reason) {
+        $changed = false;
+
+        $booking = DB::transaction(function () use ($booking, $reason, &$changed) {
             $booking = Booking::withoutTenancy()->lockForUpdate()->findOrFail($booking->getKey());
 
             if (! $booking->status->holdsDates()) {
                 return $booking;
             }
+
+            $changed = true;
 
             $booking->update([
                 'status' => BookingStatus::Cancelled,
@@ -260,6 +282,12 @@ final class BookingService
 
             return $booking;
         });
+
+        if ($changed) {
+            Notifier::bookingCancelled($booking);
+        }
+
+        return $booking;
     }
 
     private static function applyPaid(Booking $booking, int $amount): Booking

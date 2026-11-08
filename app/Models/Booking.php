@@ -30,6 +30,7 @@ class Booking extends Model
             'guests_count' => 'integer',
             'expires_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'balance_reminded_at' => 'datetime',
         ];
     }
 
@@ -46,6 +47,11 @@ class Booking extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
     }
 
     public function remaining(): int
