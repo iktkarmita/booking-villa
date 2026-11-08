@@ -11,7 +11,7 @@ use Throwable;
 
 /**
  * Email notifikasi ke tamu dan owner. Kegagalan kirim tidak pernah menggagalkan booking/pembayaran:
- * dicatat ke log lalu diabaikan. Teks mengikuti bahasa booking (tamu) atau bahasa default (owner).
+ * dicatat ke log lalu diabaikan. Teks mengikuti bahasa booking (tamu) atau bahasa default tenant (owner).
  */
 final class Notifier
 {
@@ -106,7 +106,10 @@ final class Notifier
             return;
         }
 
-        self::send($booking, $email, config('booking.default_locale', 'id'), $key, $extra, panel: true);
+        // Email owner memakai bahasa default tenant (bukan bahasa default platform).
+        $locale = \App\Models\Tenant::query()->whereKey($booking->tenant_id)->value('default_locale') ?: config('booking.default_locale', 'id');
+
+        self::send($booking, $email, $locale, $key, $extra, panel: true);
     }
 
     private static function send(Booking $booking, string $to, string $locale, string $key, array $extra, bool $panel): void

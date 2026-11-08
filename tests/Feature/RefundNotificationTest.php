@@ -294,6 +294,8 @@ class RefundNotificationTest extends TestCase
 
     public function test_booking_baru_mengirim_email_ke_owner_bila_email_notifikasi_diisi(): void
     {
+        // Bahasa platform 'en' tidak boleh memengaruhi email owner: yang dipakai bahasa default tenant.
+        config(['booking.default_locale' => 'en']);
         $this->settings(['notify_email' => 'owner@example.com']);
 
         $booking = $this->book();
