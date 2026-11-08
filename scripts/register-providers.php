@@ -19,18 +19,16 @@ if (str_contains($content, 'BookingServiceProvider')) {
     exit(0);
 }
 
-$needle = 'App\\Providers\\AppServiceProvider::class,';
+$entry = '    App\\Providers\\BookingServiceProvider::class,';
+$pos = strrpos($content, '];');
 
-if (! str_contains($content, $needle)) {
-    fwrite(STDERR, "Pola AppServiceProvider tidak ditemukan. Tambahkan manual ke bootstrap/providers.php:\n");
+if ($pos === false) {
+    fwrite(STDERR, "Format providers.php tidak dikenali. Tambahkan manual ke bootstrap/providers.php:\n");
     fwrite(STDERR, "    App\\Providers\\BookingServiceProvider::class,\n");
     exit(1);
 }
 
-file_put_contents($file, str_replace(
-    $needle,
-    $needle."\n    App\\Providers\\BookingServiceProvider::class,",
-    $content
-));
+$content = rtrim(substr($content, 0, $pos))."\n".$entry."\n".substr($content, $pos);
+file_put_contents($file, $content);
 
 echo "BookingServiceProvider didaftarkan.\n";
