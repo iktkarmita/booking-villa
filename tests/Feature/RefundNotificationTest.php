@@ -44,7 +44,7 @@ class RefundNotificationTest extends TestCase
     {
         parent::setUp();
 
-        config(['booking.base_domain' => 'localhost']);
+        config(['booking.base_domain' => 'localhost', 'app.url' => 'http://localhost:8000']);
         app()->setLocale('id');
         Mail::fake();
 
@@ -282,18 +282,27 @@ class RefundNotificationTest extends TestCase
 
     // ---------- Email ----------
 
-    public function test_booking_baru_mengirim_email_ke_tamu_dan_owner(): void
+    public function test_booking_baru_mengirim_email_ke_tamu_dengan_tautan_booking(): void
     {
-        $this->settings(['notify_email' => 'owner@example.com']);
-
         $booking = $this->book();
 
         Mail::assertSent(SimpleMail::class, fn (SimpleMail $m) => $m->hasTo('tamu@example.com')
             && str_contains($m->mailSubject, $booking->code)
             && str_contains($m->body, 'Halo Budi')
-            && str_contains($m->url, 'http://bunga.localhost')
-            && str_ends_with($m->url, '/booking/'.$booking->code));
-        Mail::assertSent(SimpleMail::class, fn (SimpleMail $m) => $m->hasTo('owner@example.com') && str_contains($m->mailSubject, 'Booking baru'));
+            && $m->url === 'http://bunga.localhost:8000/booking/'.$booking->code);
+    }
+
+    public function test_booking_baru_mengirim_email_ke_owner_bila_email_notifikasi_diisi(): void
+    {
+        $this->settings(['notify_email' => 'owner@example.com']);
+
+        $booking = $this->book();
+
+        Mail::assertSent(SimpleMail::class, fn (SimpleMail $m) => $m->hasTo('owner@example.com')
+            && str_contains($m->mailSubject, 'Booking baru')
+            && str_contains($m->mailSubject, $booking->code)
+            && $m->url === 'http://bunga.localhost:8000/admin/bunga/bookings');
+        Mail::assertSent(SimpleMail::class, 2);
     }
 
     public function test_tanpa_email_owner_hanya_tamu_yang_dikirimi(): void
