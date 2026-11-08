@@ -31,11 +31,12 @@ set_env() {
 
 if [ ! -f artisan ]; then
   echo "==> Membuat kerangka Laravel 13..."
-  TMP="$(mktemp -d)"
-  composer create-project laravel/laravel:^13.0 "$TMP/app" --prefer-dist --no-interaction
+  # Jangan beri nama variabel TMP/TEMP: itu env bawaan Windows yang dipakai PHP/Composer.
+  SKELETON_DIR="$(mktemp -d)"
+  composer create-project laravel/laravel:^13.0 "$SKELETON_DIR/app" --prefer-dist --no-interaction
   # -n: jangan menimpa file milik repo ini (model, routes, migrasi, dst.)
-  cp -Rn "$TMP/app/." . || true
-  rm -rf "$TMP"
+  cp -Rn "$SKELETON_DIR/app/." . || true
+  rm -rf "$SKELETON_DIR"
 else
   echo "==> Kerangka Laravel sudah ada, dilewati."
 fi
