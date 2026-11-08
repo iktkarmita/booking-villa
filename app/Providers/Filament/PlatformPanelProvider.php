@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\SetLocale;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -28,6 +29,7 @@ class PlatformPanelProvider extends PanelProvider
             ->id('platform')
             ->path('platform')
             ->login()
+            ->defaultThemeMode(ThemeMode::Light)
             ->brandName('Booking Villa Platform')
             ->colors(['primary' => Color::Indigo])
             ->discoverResources(
