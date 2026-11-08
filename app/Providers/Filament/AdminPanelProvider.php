@@ -6,6 +6,7 @@ use App\Filament\Admin\Widgets\SubscriptionOverview;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\SyncCurrentTenant;
 use App\Models\Tenant;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -31,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->defaultThemeMode(ThemeMode::Light)
             ->brandName('Booking Villa')
             ->colors(['primary' => Color::Teal])
             ->tenant(Tenant::class, slugAttribute: 'slug')
