@@ -17,7 +17,7 @@ final class Notifier
 {
     public static function bookingCreated(Booking $booking): void
     {
-        self::toGuest($booking, 'created', ['amount' => Money::idr(self::firstAmount($booking)), 'deadline' => self::time($booking->expires_at)]);
+        self::toGuest($booking, 'created', ['amount' => Money::idr(self::firstAmount($booking)), 'deadline' => self::time($booking->expires_at, $booking->tenant_id)]);
         self::toOwner($booking, 'owner_created');
     }
 
@@ -82,9 +82,11 @@ final class Notifier
         return (int) ($booking->payment_option === 'dp' ? $booking->dp_amount : $booking->total);
     }
 
-    private static function time($value): string
+    private static function time($value, int $tenantId): string
     {
-        return $value ? $value->timezone(config('app.timezone'))->format('d/m/Y H:i') : '-';
+        $tenant = \App\Models\Tenant::query()->find($tenantId);
+
+        return $value ? $value->timezone($tenant?->timezoneName() ?? config('app.timezone'))->format('d/m/Y H:i') : '-';
     }
 
     private static function toGuest(Booking $booking, string $key, array $extra = []): void

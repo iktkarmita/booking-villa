@@ -57,6 +57,12 @@ class Tenant extends Model implements HasName
         return $this->hasMany(Subscription::class);
     }
 
+    /** Zona waktu tenant untuk menampilkan jam (batas bayar dsb.); basis penyimpanan tetap UTC. */
+    public function timezoneName(): string
+    {
+        return filled($this->timezone) ? $this->timezone : 'Asia/Makassar';
+    }
+
     public function isSuspended(): bool
     {
         return $this->status === TenantStatus::Suspended;

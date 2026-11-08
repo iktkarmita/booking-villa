@@ -494,3 +494,7 @@ Untuk client pertama, langganan bisa dicatat manual dulu (fase 6 menyusul) supay
 - Pembayaran manual ke rekening platform (`BOOKING_PLATFORM_BANK_NAME/NUMBER/HOLDER`); super admin menekan "Tandai lunas" di panel platform → langganan diperpanjang, tenant aktif.
 - Tenant ditangguhkan setelah masa tenggang (situs publik 503, data aman); bisa juga manual dari panel platform.
 - Owner melihat tagihan (baca saja) di menu "Tagihan"; email tagihan/pengingat/lunas/ditangguhkan ke user ber-role owner.
+
+### Catatan implementasi fase 7 (poles)
+- Bahasa panel: `SetPanelLocale` (persisten) memakai pilihan sesi, lalu bahasa default tenant (panel owner), lalu `BOOKING_PANEL_LOCALE` (default `id`), jadi tidak ikut `APP_LOCALE=en`.
+- Zona waktu: kolom `tenants.timezone` (default Asia/Makassar) dipakai untuk batas bayar di email, halaman status booking, dan tanggal/jam di panel owner. Penyimpanan tetap UTC.

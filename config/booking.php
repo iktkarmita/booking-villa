@@ -23,6 +23,8 @@ return [
 
     'locales' => ['id', 'en'],
     'default_locale' => env('APP_LOCALE', 'id'),
+    // Bahasa panel (owner/platform) bila belum memilih; panel owner memakai bahasa default tenant.
+    'panel_locale' => env('BOOKING_PANEL_LOCALE', 'id'),
 
     /*
     | Akun super admin yang dibuat SetupSeeder.

@@ -50,7 +50,7 @@
                 @endif
 
                 @if ($pending->expires_at)
-                    <p class="muted">{{ __('site.booking.deadline', ['time' => $pending->expires_at->timezone(config('app.timezone'))->translatedFormat('d M Y H:i')]) }}</p>
+                    <p class="muted">{{ __('site.booking.deadline', ['time' => $pending->expires_at->timezone(app(\App\Support\CurrentTenant::class)->get()?->timezoneName() ?? config('app.timezone'))->translatedFormat('d M Y H:i')]) }}</p>
                 @endif
 
                 @if ($isQris)

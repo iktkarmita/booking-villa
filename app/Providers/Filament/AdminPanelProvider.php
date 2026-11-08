@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\SubscriptionOverview;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetPanelLocale;
 use App\Http\Middleware\SyncCurrentTenant;
 use App\Models\Tenant;
 use Filament\Enums\ThemeMode;
@@ -62,6 +63,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->middleware([SetPanelLocale::class], isPersistent: true)
             ->authMiddleware([Authenticate::class]);
     }
 }
