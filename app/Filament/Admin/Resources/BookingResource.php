@@ -9,6 +9,8 @@ use App\Filament\Admin\Resources\BookingResource\Pages\ManageBookings;
 use App\Models\Booking;
 use App\Support\BookingService;
 use App\Support\Money;
+use App\Support\RefundPolicy;
+use App\Support\RefundService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -132,9 +134,14 @@ class BookingResource extends Resource
                             ->label(__('site.owner.cancel_reason'))
                             ->rows(2)
                             ->maxLength(250),
+                        TextInput::make('refund_amount')
+                            ->label(__('site.owner.refund_on_cancel'))
+                            ->numeric()->prefix('Rp')->minValue(0)
+                            ->default(fn (Booking $record) => RefundPolicy::suggestedAmount($record))
+                            ->visible(fn (Booking $record) => $record->paid_amount > 0),
                     ])
                     ->action(function (Booking $record, array $data): void {
-                        self::run(fn () => BookingService::cancel($record, $data['reason'] ?? null));
+                        self::run(fn () => RefundService::ownerCancel($record, $data['reason'] ?? null, (int) ($data['refund_amount'] ?? 0)));
                     }),
             ]);
     }

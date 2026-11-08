@@ -477,3 +477,13 @@ Untuk client pertama, langganan bisa dicatat manual dulu (fase 6 menyusul) supay
 - Webhook: `POST /webhooks/payment/{gateway}/{slug-tenant}`, di luar grup `web` (tanpa sesi/CSRF), dibatasi 120 permintaan/menit. Selalu dicatat di `payment_webhook_logs`; tanda tangan diverifikasi dengan kredensial tenant; nominal harus sama dengan tagihan; idempotent.
 - Gateway gagal dihubungi -> tagihan tetap transfer manual. Pembayaran masuk setelah booking kedaluwarsa/batal -> dicatat `late_payment` (booking tidak dihidupkan), owner menindaklanjuti (refund di fase 5).
 - Pelunasan DP lewat QRIS: tamu menekan "Bayar pelunasan" di halaman status booking; tagihan `balance` kedaluwarsa otomatis lewat `bookings:expire`.
+
+---
+
+## Catatan implementasi fase 5 (pembatalan, refund, notifikasi)
+
+- **Tingkat refund per tenant** (`tenant_settings.refund_tiers`, mis. H-7 100%, H-3 50%): dipakai tingkat dengan H- terbesar yang terpenuhi; di luar semua tingkat 0%. `null` = bawaan (7/100, 3/50), `[]` = tanpa refund. Hanya **saran**: owner selalu bisa menetapkan nominal sendiri (0 sampai total yang sudah dibayar).
+- **Alur**: tamu mengajukan (alasan + rekening tujuan, nomor rekening terenkripsi) -> owner setujui (booking dibatalkan, tanggal bebas) / tolak -> owner transfer manual lalu tandai selesai (bukti transfer). Refund penuh menandai pembayaran `refunded`. Owner juga bisa membatalkan booking sendiri sekaligus menetapkan refund.
+- **Email** (`App\Support\Notifier`, `App\Mail\SimpleMail`): booking dibuat, pembayaran diterima/terkonfirmasi, dibatalkan, pengajuan refund (ke owner), keputusan refund, refund ditransfer, pengingat pelunasan (`bookings:remind-balance`, harian 09:00, sekali per booking). Bahasa mengikuti bahasa booking. Kegagalan kirim hanya dicatat di log dan tidak menggagalkan booking/pembayaran. Email owner memakai `tenant_settings.notify_email`.
+- **SMTP produksi** (isi di `.env`, contoh Hostinger): `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.hostinger.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME=<email@domainanda>`, `MAIL_PASSWORD=<sandi email>`, `MAIL_FROM_ADDRESS=<email@domainanda>`. Lokal: `MAIL_MAILER=log` (email ditulis ke `storage/logs/laravel.log`).
+- WhatsApp otomatis (Fonnte/Meta) belum; saat ini tombol `wa.me` di halaman status booking.

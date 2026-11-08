@@ -350,4 +350,23 @@ class PaymentGatewayTest extends TestCase
         $this->artisan('payment:fake-paid', ['code' => $booking->code])->assertFailed();
         $this->artisan('payment:fake-paid', ['code' => 'BV-TIDAKADA'])->assertFailed();
     }
+
+    public function test_menyimpan_pengaturan_tanpa_kunci_tidak_menghapus_kredensial(): void
+    {
+        $this->useGateway();
+
+        // Meniru form Pengaturan: kolom kunci dikosongkan sehingga yang terkirim array kosong.
+        $this->tenant->settings->fresh()->update(['dp_percent' => 40, 'gateway_credentials' => []]);
+        $this->tenant->settings->fresh()->update(['gateway_credentials' => null]);
+
+        $settings = $this->tenant->settings->fresh();
+
+        $this->assertSame(40, $settings->dp_percent);
+        $this->assertSame(self::SECRET, $settings->gateway_credentials['secret']);
+
+        // Mengisi kunci baru tetap bisa mengganti.
+        $settings->update(['gateway_credentials' => ['secret' => 'baru']]);
+
+        $this->assertSame('baru', $this->tenant->settings->fresh()->gateway_credentials['secret']);
+    }
 }

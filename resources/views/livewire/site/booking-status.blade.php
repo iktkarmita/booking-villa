@@ -80,6 +80,60 @@
         </div>
     @endif
 
+    @if ($refund)
+        <div class="card" style="margin-bottom:1rem;">
+            <div class="body">
+                @if ($refund->status === 'requested')
+                    <p>{{ __('site.booking.refund_requested') }}</p>
+                @elseif ($refund->status === 'approved')
+                    <p>{{ __('site.booking.refund_approved', ['amount' => \App\Support\Money::idr((int) $refund->amount_approved)]) }}</p>
+                @elseif ($refund->status === 'refunded')
+                    <p class="ok">{{ __('site.booking.refund_refunded', ['amount' => \App\Support\Money::idr((int) $refund->amount_approved)]) }}</p>
+                @elseif ($refund->status === 'rejected')
+                    <p class="err">{{ __('site.booking.refund_rejected') }}</p>
+                    @if (filled($refund->owner_note))<p class="muted">{{ $refund->owner_note }}</p>@endif
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if ($canCancel)
+        <div class="card" style="margin-bottom:1rem;">
+            <div class="body">
+                @if (! $cancelOpen)
+                    <button class="btn gray" type="button" wire:click="$set('cancelOpen', true)">{{ __('site.booking.cancel_open') }}</button>
+                @else
+                    <h2 style="margin-top:0;">{{ __('site.booking.cancel_title') }}</h2>
+                    <p class="muted">{{ __('site.booking.cancel_estimate', ['percent' => $refundPercent, 'amount' => \App\Support\Money::idr($refundEstimate)]) }}</p>
+                    <form wire:submit="requestCancel">
+                        <div class="field">
+                            <label for="cancelReason">{{ __('site.booking.cancel_reason') }}</label>
+                            <textarea id="cancelReason" rows="2" wire:model="cancelReason"></textarea>
+                            @error('cancelReason') <div class="err">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="field">
+                            <label for="destBank">{{ __('site.booking.cancel_bank') }}</label>
+                            <input id="destBank" type="text" wire:model="destBank">
+                            @error('destBank') <div class="err">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="field">
+                            <label for="destName">{{ __('site.booking.cancel_name') }}</label>
+                            <input id="destName" type="text" wire:model="destName">
+                            @error('destName') <div class="err">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="field">
+                            <label for="destNumber">{{ __('site.booking.cancel_number') }}</label>
+                            <input id="destNumber" type="text" wire:model="destNumber">
+                            @error('destNumber') <div class="err">{{ $message }}</div> @enderror
+                        </div>
+                        @error('cancel') <div class="err">{{ $message }}</div> @enderror
+                        <button class="btn" type="submit" wire:loading.attr="disabled">{{ __('site.booking.cancel_btn') }}</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+
     @if ($waLink)
         <p><a class="btn gray" href="{{ $waLink }}" target="_blank" rel="noopener">{{ __('site.booking.contact') }}</a></p>
     @endif

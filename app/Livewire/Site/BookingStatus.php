@@ -8,6 +8,8 @@ use App\Models\Booking;
 use App\Models\TenantSetting;
 use App\Support\Payment\GatewayFactory;
 use App\Support\PaymentService;
+use App\Support\RefundPolicy;
+use App\Support\RefundService;
 use App\Support\QrImage;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -22,6 +24,16 @@ class BookingStatus extends Component
     public $proof = null;
 
     public bool $uploaded = false;
+
+    public bool $cancelOpen = false;
+
+    public string $cancelReason = '';
+
+    public string $destBank = '';
+
+    public string $destName = '';
+
+    public string $destNumber = '';
 
     public function mount(string $code): void
     {
@@ -54,6 +66,30 @@ class BookingStatus extends Component
         $this->uploaded = true;
     }
 
+    public function requestCancel(): void
+    {
+        $this->validate([
+            'cancelReason' => ['required', 'string', 'max:500'],
+            'destBank' => ['required', 'string', 'max:100'],
+            'destName' => ['required', 'string', 'max:100'],
+            'destNumber' => ['required', 'string', 'max:50'],
+        ]);
+
+        try {
+            RefundService::request($this->booking(), $this->cancelReason, [
+                'bank' => $this->destBank,
+                'name' => $this->destName,
+                'number' => $this->destNumber,
+            ]);
+        } catch (BookingRuleViolated $e) {
+            $this->addError('cancel', $e->getMessage());
+
+            return;
+        }
+
+        $this->reset('cancelOpen', 'cancelReason', 'destBank', 'destName', 'destNumber');
+    }
+
     public function payBalance(): void
     {
         try {
@@ -76,7 +112,17 @@ class BookingStatus extends Component
             && $booking->remaining() > 0
             && GatewayFactory::forSettings($settings) !== null;
 
+        $refund = $booking->refunds()->latest('id')->first();
+        $canCancel = $booking->status === Status::Confirmed
+            && $booking->paid_amount > 0
+            && ! in_array($refund?->status, ['requested', 'approved'], true);
+        $refundPercent = RefundPolicy::percent($settings, $booking->check_in);
+
         return view('livewire.site.booking-status', [
+            'refund' => $refund,
+            'canCancel' => $canCancel,
+            'refundPercent' => $refundPercent,
+            'refundEstimate' => (int) floor($booking->paid_amount * $refundPercent / 100),
             'isQris' => $isQris,
             'qrImage' => $isQris ? QrImage::dataUri($pending->qr_string) : null,
             'canPayBalance' => $canPayBalance,
