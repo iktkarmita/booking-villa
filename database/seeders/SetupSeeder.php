@@ -19,6 +19,7 @@ class SetupSeeder extends Seeder
     public function run(): void
     {
         $this->call(PlanSeeder::class);
+        $this->call(AmenitySeeder::class);
 
         $password = config('booking.admin_password');
 
