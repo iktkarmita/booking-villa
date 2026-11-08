@@ -24,8 +24,19 @@
         <div class="card" style="margin-bottom:1rem;">
             <div class="body">
                 <h2 style="margin-top:0;">{{ __('site.booking.pay_title') }}</h2>
-                <p>{{ __('site.booking.pay_info', ['amount' => \App\Support\Money::idr($pending->amount)]) }}</p>
+                @unless ($isQris)
+                    <p>{{ __('site.booking.pay_info', ['amount' => \App\Support\Money::idr($pending->amount)]) }}</p>
+                @endunless
 
+                @if ($isQris)
+                    <p>{{ __('site.booking.qris_info', ['amount' => \App\Support\Money::idr($pending->amount)]) }}</p>
+                    @if ($qrImage)
+                        <p style="text-align:center;"><img src="{{ $qrImage }}" alt="QRIS" style="width:240px;max-width:100%;background:#fff;padding:8px;border:1px solid #e5e7eb;border-radius:8px;"></p>
+                    @else
+                        <p><code style="word-break:break-all;">{{ $pending->qr_string }}</code></p>
+                    @endif
+                    <p class="muted">{{ __('site.booking.qris_waiting') }}</p>
+                @else
                 @if (filled($settings?->bank_account_number))
                     <table class="info">
                         <tr><td>{{ __('site.booking.bank') }}</td><td><strong>{{ $settings->bank_name }}</strong></td></tr>
@@ -36,11 +47,15 @@
                     <p class="err">{{ __('site.booking.no_bank') }}</p>
                 @endif
 
-                @if ($booking->expires_at)
-                    <p class="muted">{{ __('site.booking.deadline', ['time' => $booking->expires_at->timezone(config('app.timezone'))->translatedFormat('d M Y H:i')]) }}</p>
                 @endif
 
-                @if ($hasProof || $uploaded)
+                @if ($pending->expires_at)
+                    <p class="muted">{{ __('site.booking.deadline', ['time' => $pending->expires_at->timezone(config('app.timezone'))->translatedFormat('d M Y H:i')]) }}</p>
+                @endif
+
+                @if ($isQris)
+                    {{-- QRIS: konfirmasi otomatis lewat callback gateway --}}
+                @elseif ($hasProof || $uploaded)
                     <p class="ok">{{ __('site.booking.uploaded') }}</p>
                 @else
                     <form wire:submit="uploadProof">
@@ -52,6 +67,15 @@
                         <button class="btn" type="submit" wire:loading.attr="disabled">{{ __('site.booking.upload_btn') }}</button>
                     </form>
                 @endif
+            </div>
+        </div>
+    @endif
+
+    @if ($canPayBalance)
+        <div class="card" style="margin-bottom:1rem;">
+            <div class="body">
+                <button class="btn" type="button" wire:click="payBalance" wire:loading.attr="disabled">{{ __('site.booking.pay_balance', ['amount' => \App\Support\Money::idr($booking->remaining())]) }}</button>
+                @error('balance') <div class="err">{{ $message }}</div> @enderror
             </div>
         </div>
     @endif

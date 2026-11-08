@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\TenantSettingResource\Pages\ManageTenantSettings;
 use App\Models\TenantSetting;
+use App\Support\Payment\GatewayFactory;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -72,6 +73,23 @@ class TenantSettingResource extends Resource
             TextInput::make('bank_account_name')
                 ->label(__($t.'bank_account_name'))
                 ->maxLength(100)
+                ->columnSpanFull(),
+            Select::make('gateway')
+                ->label(__($t.'gateway'))
+                ->options(fn () => collect(GatewayFactory::available())
+                    ->mapWithKeys(fn (string $g) => [$g => __($t.'gateway_'.$g)])
+                    ->all())
+                ->default('manual')
+                ->required()
+                ->live()
+                ->columnSpanFull(),
+            TextInput::make('gateway_credentials.secret')
+                ->label(__($t.'gateway_secret'))
+                ->helperText(__($t.'gateway_secret_help'))
+                ->password()
+                ->revealable()
+                ->dehydrated(fn (?string $state) => filled($state))
+                ->visible(fn ($get) => $get('gateway') !== 'manual')
                 ->columnSpanFull(),
             TextInput::make('wa_number')
                 ->label(__($t.'wa_number'))

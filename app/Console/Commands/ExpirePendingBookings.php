@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Support\BookingService;
+use App\Support\PaymentService;
 use Illuminate\Console\Command;
 
 class ExpirePendingBookings extends Command
@@ -15,7 +16,9 @@ class ExpirePendingBookings extends Command
     {
         $count = BookingService::expireOverdue();
 
-        $this->info("{$count} booking dikedaluwarsakan.");
+        $payments = PaymentService::expireStalePayments();
+
+        $this->info("{$count} booking dan {$payments} tagihan pelunasan dikedaluwarsakan.");
 
         return self::SUCCESS;
     }
