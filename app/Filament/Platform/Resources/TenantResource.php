@@ -6,6 +6,7 @@ use App\Enums\TenantStatus;
 use App\Filament\Platform\Resources\TenantResource\Pages\ManageTenants;
 use App\Models\Tenant;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -106,6 +107,20 @@ class TenantResource extends Resource
             ])
             ->defaultSort('name')
             ->recordActions([
+                Action::make('suspend')
+                    ->label(__('billing.actions.suspend'))
+                    ->icon('heroicon-o-pause-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (Tenant $record) => ! $record->isSuspended())
+                    ->action(fn (Tenant $record) => $record->update(['status' => TenantStatus::Suspended])),
+                Action::make('activate')
+                    ->label(__('billing.actions.activate'))
+                    ->icon('heroicon-o-play-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (Tenant $record) => $record->isSuspended())
+                    ->action(fn (Tenant $record) => $record->update(['status' => TenantStatus::Active])),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

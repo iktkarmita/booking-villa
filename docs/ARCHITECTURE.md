@@ -487,3 +487,10 @@ Untuk client pertama, langganan bisa dicatat manual dulu (fase 6 menyusul) supay
 - **Email** (`App\Support\Notifier`, `App\Mail\SimpleMail`): booking dibuat, pembayaran diterima/terkonfirmasi, dibatalkan, pengajuan refund (ke owner), keputusan refund, refund ditransfer, pengingat pelunasan (`bookings:remind-balance`, harian 09:00, sekali per booking). Bahasa mengikuti bahasa booking. Kegagalan kirim hanya dicatat di log dan tidak menggagalkan booking/pembayaran. Email owner memakai `tenant_settings.notify_email`.
 - **SMTP produksi** (isi di `.env`, contoh Hostinger): `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.hostinger.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME=<email@domainanda>`, `MAIL_PASSWORD=<sandi email>`, `MAIL_FROM_ADDRESS=<email@domainanda>`. Lokal: `MAIL_MAILER=log` (email ditulis ke `storage/logs/laravel.log`).
 - WhatsApp otomatis (Fonnte/Meta) belum; saat ini tombol `wa.me` di halaman status booking.
+
+### Catatan implementasi fase 6 (langganan & tagihan)
+- Tabel `subscription_invoices` (unpaid|paid|void). `SubscriptionService::process()` dijalankan `subscriptions:process` setiap hari 01:00: kedaluwarsa → tagihan → tangguhkan → pengingat.
+- Tagihan dibuat `BOOKING_INVOICE_LEAD_DAYS` (7) hari sebelum langganan berakhir; masa tenggang `BOOKING_GRACE_DAYS` (7); pengingat `BOOKING_REMINDER_DAYS` (3) sebelum jatuh tempo.
+- Pembayaran manual ke rekening platform (`BOOKING_PLATFORM_BANK_NAME/NUMBER/HOLDER`); super admin menekan "Tandai lunas" di panel platform → langganan diperpanjang, tenant aktif.
+- Tenant ditangguhkan setelah masa tenggang (situs publik 503, data aman); bisa juga manual dari panel platform.
+- Owner melihat tagihan (baca saja) di menu "Tagihan"; email tagihan/pengingat/lunas/ditangguhkan ke user ber-role owner.
