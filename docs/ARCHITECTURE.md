@@ -468,3 +468,12 @@ Untuk client pertama, langganan bisa dicatat manual dulu (fase 6 menyusul) supay
 1. Harga paket di atas 30 kamar: lanjut +Rp100.000 per 10 kamar, atau harga khusus?
 2. Ada masa **trial gratis** untuk owner baru? Berapa hari?
 3. Langganan tahunan (diskon) diperlukan di awal?
+
+---
+
+## Catatan implementasi fase 4 (gateway QRIS)
+
+- Kontrak `App\Contracts\PaymentGateway` (`createQris`, `verifyWebhook`, `parseWebhook`). Driver tersedia: `FakeGateway` (pengembangan/tes, tidak aktif di production). Driver gateway nyata (iPaymu/Duitku) ditambahkan di `App\Support\Payment\GatewayFactory` setelah ada akun sandbox untuk menguji format tanda tangan dan callback-nya.
+- Webhook: `POST /webhooks/payment/{gateway}/{slug-tenant}`, di luar grup `web` (tanpa sesi/CSRF), dibatasi 120 permintaan/menit. Selalu dicatat di `payment_webhook_logs`; tanda tangan diverifikasi dengan kredensial tenant; nominal harus sama dengan tagihan; idempotent.
+- Gateway gagal dihubungi -> tagihan tetap transfer manual. Pembayaran masuk setelah booking kedaluwarsa/batal -> dicatat `late_payment` (booking tidak dihidupkan), owner menindaklanjuti (refund di fase 5).
+- Pelunasan DP lewat QRIS: tamu menekan "Bayar pelunasan" di halaman status booking; tagihan `balance` kedaluwarsa otomatis lewat `bookings:expire`.

@@ -88,7 +88,7 @@ final class BookingService
         $firstAmount = $option === 'dp' ? $dpAmount : $total;
         $expiresAt = now()->addMinutes((int) ($settings?->booking_hold_minutes ?? 120));
 
-        return DB::transaction(function () use ($room, $in, $out, $guestsCount, $guestData, $option, $locale, $source, $notes, $quote, $total, $dpAmount, $balanceDue, $firstAmount, $expiresAt) {
+        $booking = DB::transaction(function () use ($room, $in, $out, $guestsCount, $guestData, $option, $locale, $source, $notes, $quote, $total, $dpAmount, $balanceDue, $firstAmount, $expiresAt) {
             $guest = Guest::withoutTenancy()
                 ->where('tenant_id', $room->tenant_id)
                 ->where('email', mb_strtolower(trim($guestData['email'])))
@@ -145,6 +145,15 @@ final class BookingService
 
             return $booking;
         });
+
+        // Panggilan ke gateway di luar transaksi; bila gagal, tamu tetap bisa transfer manual.
+        $payment = Payment::withoutTenancy()->where('booking_id', $booking->getKey())->where('status', 'pending')->latest('id')->first();
+
+        if ($payment) {
+            PaymentService::startQris($payment);
+        }
+
+        return $booking;
     }
 
     /** Owner mengonfirmasi pembayaran (transfer manual) sudah diterima. */
