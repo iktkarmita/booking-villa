@@ -10,6 +10,7 @@ use App\Support\RoomQuota;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Room extends Model
@@ -53,5 +54,15 @@ class Room extends Model
     public function villa(): BelongsTo
     {
         return $this->belongsTo(Villa::class);
+    }
+
+    public function seasonalPrices(): HasMany
+    {
+        return $this->hasMany(SeasonalPrice::class);
+    }
+
+    public function calendarDays(): HasMany
+    {
+        return $this->hasMany(CalendarDay::class);
     }
 }
