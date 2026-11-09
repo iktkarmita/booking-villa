@@ -8,15 +8,9 @@ Rancangan lengkap (ERD, alur, fase pengerjaan): [`docs/ARCHITECTURE.md`](docs/AR
 
 ## Status
 
-Fase 0 (kerangka + tenancy). Kode ditulis tanpa bisa dijalankan di lingkungan penulis, jadi **jalankan `php artisan test` pertama kali** dan laporkan error bila ada.
+Fase 0–7 selesai: tenancy, villa & kamar, ketersediaan & harga musiman, situs publik + booking, QRIS per tenant + webhook, pembatalan & refund + notifikasi email, langganan & panel platform, serta laporan owner (pendapatan, okupansi, ekspor CSV), pengerasan keamanan (rate limit, header keamanan, trusted proxy), dan paket deploy.
 
-Sudah ada:
-- Multi-tenancy satu database (`tenant_id`, `BelongsToTenant`, `CurrentTenant`, `ResolveTenant` dari subdomain/domain sendiri)
-- Panel **platform** (`/platform`, super admin): tenant, paket, langganan, pengguna
-- Panel **owner** (`/admin/{slug-tenant}`): dashboard ringkasan paket
-- Paket per jumlah kamar (Starter 10 / Growth 20 / Business 30) lewat `PlanSeeder`
-- Bahasa ID/EN (`lang/`), pilihan bahasa di sesi (`/lang/id`, `/lang/en`)
-- Tes: isolasi tenant, resolusi tenant, bahasa, paket/langganan, akses panel
+Panduan produksi: [`docs/DEPLOY.md`](docs/DEPLOY.md). Jalankan `php artisan test` sebelum setiap rilis.
 
 ## Setup lokal
 

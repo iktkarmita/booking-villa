@@ -11,11 +11,14 @@ use App\Support\CurrentTenant;
 use App\Support\PriceCalculator;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use App\Livewire\Concerns\ThrottlesActions;
 use InvalidArgumentException;
 use Livewire\Component;
 
 class Checkout extends Component
 {
+    use ThrottlesActions;
+
     public int $roomId;
 
     public string $checkIn = '';
@@ -68,6 +71,10 @@ class Checkout extends Component
 
     public function submit(): mixed
     {
+        if ($this->throttled('checkout', 6, 'checkIn')) {
+            return null;
+        }
+
         $this->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:150'],

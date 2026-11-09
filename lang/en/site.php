@@ -104,6 +104,7 @@ return [
     ],
     'payment_status' => ['unpaid' => 'Unpaid', 'partial' => 'Deposit paid', 'paid' => 'Paid in full', 'refunded' => 'Refunded'],
     'errors' => [
+        'throttled' => 'Too many attempts. Please try again in :seconds seconds.',
         'past_date' => 'Check-in cannot be before today.',
         'min_nights' => 'Minimum stay is :min night(s) for these dates.',
         'max_guests' => 'Maximum :max guests for this room.',
