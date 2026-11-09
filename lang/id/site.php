@@ -104,6 +104,7 @@ return [
     ],
     'payment_status' => ['unpaid' => 'Belum dibayar', 'partial' => 'DP dibayar', 'paid' => 'Lunas', 'refunded' => 'Dikembalikan'],
     'errors' => [
+        'throttled' => 'Terlalu banyak percobaan. Coba lagi dalam :seconds detik.',
         'past_date' => 'Tanggal check-in tidak boleh sebelum hari ini.',
         'min_nights' => 'Minimal menginap :min malam untuk tanggal ini.',
         'max_guests' => 'Maksimal :max tamu untuk kamar ini.',

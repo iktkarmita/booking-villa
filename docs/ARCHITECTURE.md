@@ -447,7 +447,7 @@ tests/ (Feature, Unit)
 | 4 | Gateway QRIS per tenant + webhook + auto-expire + pelunasan DP | Pembayaran otomatis |
 | 5 | Pembatalan & refund + notifikasi email/WhatsApp (`link`, lalu `fonnte`) | Kabar otomatis, refund tercatat |
 | 6 | Langganan: invoice, suspend, panel platform | Model SaaS berjalan |
-| 7 | Laporan, polishing, deploy (VPS, wildcard SSL) | Siap untuk client pertama |
+| 7 | Laporan, polishing, deploy (VPS, wildcard SSL) | Siap untuk client pertama. **Selesai**: halaman Laporan owner (`ReportService`), rate limit aksi publik, header keamanan, trusted proxy, `docs/DEPLOY.md` + `deploy/` |
 
 Untuk client pertama, langganan bisa dicatat manual dulu (fase 6 menyusul) supaya cepat go-live.
 

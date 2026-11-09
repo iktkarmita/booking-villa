@@ -15,7 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Di belakang Nginx/load balancer: percayai header X-Forwarded-* supaya IP, skema (https),
+        // dan host tenant terbaca benar. Isi TRUSTED_PROXIES dengan IP proxy (koma) atau "*".
+        $proxies = trim((string) env('TRUSTED_PROXIES', ''));
+
+        if ($proxies !== '') {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

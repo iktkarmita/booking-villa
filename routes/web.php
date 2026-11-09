@@ -15,6 +15,6 @@ Route::middleware(['tenant.resolve', 'tenant.active', 'locale'])->group(function
     Route::middleware('tenant.required')->group(function () {
         Route::get('/villas/{slug}', [SiteController::class, 'villa'])->name('site.villa');
         Route::get('/book/{room}', [SiteController::class, 'checkout'])->whereNumber('room')->name('site.checkout');
-        Route::get('/booking/{code}', [SiteController::class, 'booking'])->name('site.booking');
+        Route::get('/booking/{code}', [SiteController::class, 'booking'])->middleware('throttle:60,1')->name('site.booking');
     });
 });

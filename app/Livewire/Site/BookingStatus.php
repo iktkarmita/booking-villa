@@ -11,13 +11,14 @@ use App\Support\PaymentService;
 use App\Support\RefundPolicy;
 use App\Support\RefundService;
 use App\Support\QrImage;
+use App\Livewire\Concerns\ThrottlesActions;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class BookingStatus extends Component
 {
-    use WithFileUploads;
+    use ThrottlesActions, WithFileUploads;
 
     public string $code;
 
@@ -51,6 +52,10 @@ class BookingStatus extends Component
 
     public function uploadProof(): void
     {
+        if ($this->throttled('proof', 10, 'proof')) {
+            return;
+        }
+
         $this->validate(['proof' => ['required', 'image', 'max:4096']]);
 
         $booking = $this->booking();
@@ -68,6 +73,10 @@ class BookingStatus extends Component
 
     public function requestCancel(): void
     {
+        if ($this->throttled('cancel', 5, 'cancel')) {
+            return;
+        }
+
         $this->validate([
             'cancelReason' => ['required', 'string', 'max:500'],
             'destBank' => ['required', 'string', 'max:100'],
@@ -92,6 +101,10 @@ class BookingStatus extends Component
 
     public function payBalance(): void
     {
+        if ($this->throttled('balance', 6, 'balance')) {
+            return;
+        }
+
         try {
             PaymentService::requestBalance($this->booking());
         } catch (BookingRuleViolated $e) {
